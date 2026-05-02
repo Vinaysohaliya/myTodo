@@ -1,0 +1,79 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String         @id @default(uuid())
+  email              String         @unique
+  name               String
+  passwordHash       String
+  avatar             String?
+  currentStreak      Int            @default(0)
+  longestStreak      Int            @default(0)
+  lastCompletedDate  String?
+  dailyGoal          Int            @default(3)
+  totalCompleted     Int            @default(0)
+  focusSessions      Int            @default(0)
+  identityStatement  String?
+  xp                 Int            @default(0)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  todos              Todo[]
+  refreshTokens      RefreshToken[]
+  habits             Habit[]
+}
+
+model Todo {
+  id         String    @id @default(uuid())
+  title      String
+  category   String    @default("personal")
+  completed  Boolean   @default(false)
+  priority   String    @default("medium")
+  difficulty String    @default("medium")
+  importance String    @default("medium")
+  urgency    String    @default("medium")
+  dueDate    DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Habit {
+  id                  String     @id @default(uuid())
+  title               String
+  identityStatement   String?
+  twoMinuteStarter    String?
+  implementationWhen  String?
+  implementationWhere String?
+  userId              String
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs                HabitLog[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
+
+model HabitLog {
+  id        String   @id @default(uuid())
+  habitId   String
+  userId    String
+  date      String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
